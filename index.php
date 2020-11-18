@@ -117,15 +117,11 @@ $user->update();
 echo"<br><br>final<br<br>";
 echo "<br>";
 
-
-class WhereClaus {
+class KeyValClaus {
     public $key;
     public $operator;
     public $value;
     
-    //AND - OR
-    public $afterCondition = NULL;
-
     public function __construct($key, $operator, $value) {
         $this->key = $key;
         $this->operator = $operator;
@@ -133,17 +129,21 @@ class WhereClaus {
     }
 }
 
-class JoinWhereClaus {
+class WhereClaus extends KeyValClaus {
+    //AND - OR
+    public $afterCondition = NULL;
+
+    public function __construct($key, $operator, $value) {
+        parent::__construct($key, $operator, $value);
+    }
+}
+
+class JoinWhereClaus extends WhereClaus {
     public $table;
-    public $key;
-    public $operator;
-    public $value;
-    
+
     public function __construct($table, $key, $operator, $value) {
+        parent::__construct($key, $operator, $value);
         $this->table = $table;
-        $this->key = $key;
-        $this->operator = $operator;
-        $this->value = $value;
     }
 }
 
@@ -213,6 +213,10 @@ class SelectQuery extends Query {
     public function or() { $this->lastCondition = "OR";  return $this; }
     public function not() { $this->lastCondition = "NOT";  return $this; }
 
+    public function count($column = "id") { $this->selection = ["COUNT(" . $column . ")"]; return $this; }
+    public function average($column = "id") { $this->selection = ["AVG(" . $column . ")"]; return $this; }
+    public function sum($column = "id") { $this->selection = ["SUM(" . $column . ")"]; return $this; }
+
     public function join($table, $key, $operator, $value) {
         $joinClaus = new JoinWhereClaus($table, $key, $operator, $value);
         array_push($this->joins, $joinClaus);
@@ -260,12 +264,33 @@ $builder = $builder
     ->execute();
 
 echo"<br>";
+echo"Example queries: <br>";
+echo "SELECT COUNT(column_name) FROM table_name WHERE condition;";
+echo"<br>";
 echo "SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate FROM Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;";
 
 
-        
 
 echo"<br>";
+echo"<br>";
+$builder = new QueryBuilder();
+$builder = $builder
+    ->select()
+    ->table("Users")
+    ->where("id", "=", 4)
+    ->count()
+    ->execute();
+echo"<br>";
+echo"<br>";
+$builder = new QueryBuilder();
+$builder = $builder
+    ->select()
+    ->table("Users")
+    ->setColumns(["name", "age"])
+    ->where("id", "=", 4)
+    ->or()
+    ->where("id", "=", 6)
+    ->execute();
 echo"<br>";
 $builder = new QueryBuilder();
 $builder = $builder
@@ -278,13 +303,5 @@ $builder = $builder
 
 echo"<br>";
 echo"<br>";
-// $builder = new QueryBuilder();
-// $builder = $builder
-//     ->select()
-//     ->table("Users")
-//     ->setColumns(["name", "age"])
-//     ->where("id", "=", 4)
-//     ->or()
-//     ->where("id", "=", 6)
-//     ->execute();
+
 
