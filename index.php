@@ -105,6 +105,7 @@ class User extends Entity {
 
 $user = User::find(4);
 $user->name = "wow";
+$user->age = 90;
 $user->update();
 
 // $nUser = new User();
@@ -116,10 +117,6 @@ $user->update();
 echo"<br><br>final<br<br>";
 echo "<br>";
 
-
-interface IQuery {
-    public function execute();
-}
 
 class WhereClaus {
     public $key;
@@ -136,29 +133,67 @@ class WhereClaus {
     }
 }
 
-class QueryBuilder implements IQuery {
-
-    private $table;
-    private $selection = ["*"];
-
-    private $where = [];
-
-    public function __construct() {
-
+class JoinWhereClaus {
+    public $table;
+    public $key;
+    public $operator;
+    public $value;
+    
+    public function __construct($table, $key, $operator, $value) {
+        $this->table = $table;
+        $this->key = $key;
+        $this->operator = $operator;
+        $this->value = $value;
     }
+}
+
+class QueryBuilder {
+    
+    public function select() {
+        return new SelectQuery();
+    }
+
+    public function insert() {
+        return new InsertQuery();
+    }
+}
+
+abstract class Query {
+    protected $table;
 
     public function table($table) {
         $this->table = $table;
         return $this;
     }
+
+    public abstract function execute();
+}
+
+class InsertQuery extends Query {
+    // INSERT INTO Customers (CustomerName, City, Country)
+    // VALUES ('Cardinal', 'Stavanger', 'Norway');
+
+    public function execute() {
+        global $pdo;
+
+        $sql = "INSERT INTO " . $this->table;
+        echo $sql;
+        // implode(", ", $this->selection) . 
+        // $sql = "SELECT " . implode(", ", $this->selection) . " FROM " . $this->table;
+    }
+}
+
+class SelectQuery extends Query {
+
+    private $selection = ["*"];
+    private $where = [];
+    private $lastCondition = NULL;
+    private $joins = [];
     
     public function setColumns($selection) {
         $this->selection = $selection;
         return $this;
-        // $sql = "SELECT * FROM " . static::tableName() . " WHERE id=?";
     }
-
-    private $lastCondition = NULL;
 
     // $array = array("foo" => "bar");
     public function where($key, $operator, $value) {
@@ -178,21 +213,35 @@ class QueryBuilder implements IQuery {
     public function or() { $this->lastCondition = "OR";  return $this; }
     public function not() { $this->lastCondition = "NOT";  return $this; }
 
+    public function join($table, $key, $operator, $value) {
+        $joinClaus = new JoinWhereClaus($table, $key, $operator, $value);
+        array_push($this->joins, $joinClaus);
+        return $this;
+    }
+
     public function execute() {
         global $pdo;
 
         $sql = "SELECT " . implode(", ", $this->selection) . " FROM " . $this->table;
 
-        if(!is_null($this->where)) {
+        $joins = $this->joins;
+        if(!empty($joins)) {
+            for($i = 0; $i < count($joins); $i++) {
+                $sql .= " INNER JOIN ";
+                $sql .=  $joins[$i]->table . " ON " .$joins[$i]->key . $joins[$i]->operator . $joins[$i]->value;
+            }
+        }
+        
+        $where = $this->where;
+        if(!empty($where)) {
             $sql .= " WHERE ";
-            for($i = 0; $i < count($this->where); $i++) {
-                $sql .= $this->where[$i]->key . $this->where[$i]->operator . $this->where[$i]->value;
-
-                $afterCon = $this->where[$i]->afterCondition;
+            for($i = 0; $i < count($where); $i++) {
+                $sql .= $where[$i]->key . $where[$i]->operator . $where[$i]->value;
+                $afterCon = $where[$i]->afterCondition;
                 if(!is_null($afterCon)) {
                     $sql .= " " . $afterCon . " ";
                 }
-            }            
+            }
 
             // $pdo->prepare($sql);
             // $prepared = $pdo->prepare("SELECT * FROM " . static::tableName() . " WHERE id=?");
@@ -204,14 +253,38 @@ class QueryBuilder implements IQuery {
 }
 
 
-
 $builder = new QueryBuilder();
 $builder = $builder
+    ->insert()
     ->table("Users")
-    // ->setColumns("name") //Optional moetmet array kunnen
-    ->setColumns(["name", "age"])
-    ->where("id", "=", 4)
-    // ->and()
-    // ->where("id", "=", 6)
     ->execute();
+
+echo"<br>";
+echo "SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate FROM Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;";
+
+
+        
+
+echo"<br>";
+echo"<br>";
+$builder = new QueryBuilder();
+$builder = $builder
+    ->select()
+    ->table("Users")
+    ->join("Products", "Users.id", "=", "Products.user_id")
+    ->join("Category", "Users.id", "=", "Category.user_id")
+    ->setColumns(["User.name", "User.age", "Product.name"])
+    ->execute();
+
+echo"<br>";
+echo"<br>";
+// $builder = new QueryBuilder();
+// $builder = $builder
+//     ->select()
+//     ->table("Users")
+//     ->setColumns(["name", "age"])
+//     ->where("id", "=", 4)
+//     ->or()
+//     ->where("id", "=", 6)
+//     ->execute();
 
