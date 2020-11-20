@@ -1,4 +1,4 @@
-# Example
+# Examples
 
 ## index.php
 ```php
@@ -19,13 +19,14 @@ $result = (new SelectQuery($pdo))
     ->getAll();
 ```
 
+### Join
 ```php
 $result = (new SelectQuery($pdo))
     ->table("Users")
-    ->join("Products", "Products.id", "=", 1)
-    ->join("Category", "Users.id", "=", "Category.user_id")
-    ->setColumns(["Users.name", "Products.name"])
-    ->get();
+    ->setColumns(["Users.name", "Users.email", "Animals.name"])
+    ->join("Animals", "Users.id", "=", "Animals.user_id")
+    ->where("Animals.age", ">", "4")
+    ->getAll();
 ```
 
 ## Insert
@@ -37,4 +38,25 @@ $result = (new InsertQuery($pdo))
         "age" => 20, 
         "email" => "mail@example.com"
     ]);
+```
+
+## Update
+```php
+$result = (new UpdateQuery($pdo))
+    ->table("Users")
+    ->update(["name" => "IkBenCool"])
+    ->where("id", "=", 20)
+    ->or()
+    ->where("id", "=", 31)
+    ->exec();
+```
+
+## Delete
+```php
+$result = (new DeleteQuery($pdo))
+    ->table("Users")
+    ->where("id", "=", 11)
+    ->or()
+    ->where("id", "=", 16)
+    ->exec();
 ```

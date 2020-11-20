@@ -75,15 +75,17 @@ class SelectQuery extends WhereQuery {
             }
         }
         
-        // echo $sql . "<br>";
-
         //Een van de twee moet altijd null zijn
         $whereOrJoin = array_merge($where, $joins);
         $prepared = $this->pdo->prepare($sql);
         foreach ($whereOrJoin as $clause) {
-            $prepared->bindValue($clause->placeholder, $clause->value);
+            //Needed for joins. Parameters can't take a . (example: "Animals.user_id") | handled in KeyValClause
+            if(substr($clause->placeholder, 0, 1) == ":") {
+                $prepared->bindValue($clause->placeholder, $clause->value);
+            }
         }
 
+        print_r($prepared);
         $prepared->execute();
         return $prepared;
     }

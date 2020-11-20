@@ -1,7 +1,5 @@
 <?php
 
-
-
 class DeleteQuery extends WhereQuery {
     
     public function exec() {
@@ -13,7 +11,7 @@ class DeleteQuery extends WhereQuery {
         foreach ($this->where as $clause) {
             $prepared->bindValue($clause->placeholder, $clause->value);
         }
-
+        // print_r($prepared);
         return $prepared->execute();
     }
 }

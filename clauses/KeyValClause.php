@@ -11,8 +11,11 @@ class KeyValClause {
     public function __construct($key, $operator, $value) {
         $this->key = $key;
         $this->operator = $operator;
-        $this->placeholder = ":".static::$placeholderCounter;
         $this->value = $value;
+        
+        $this->placeholder = (strpos($value, ".") !== false)
+            ? $value
+            : ":".static::$placeholderCounter;
 
         static::$placeholderCounter++;
     }

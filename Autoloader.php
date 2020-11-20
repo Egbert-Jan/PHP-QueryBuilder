@@ -12,11 +12,10 @@ function autoLoadQueryBuilder($className) {
 
     $fileName = $className . ".php";
     if(!file_exists($fileName)) {
-        echo "nooooo";
+        echo "nooooo class found";
         return false;
     }
 
-    // echo $fileName;
     include_once $fileName;
     return true;
 }
