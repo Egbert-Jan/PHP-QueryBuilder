@@ -21,8 +21,8 @@ class SelectQuery extends WhereQuery {
     public function sum($column = "id") { $this->selection = ["SUM(" . $column . ")"]; return $this; }
 
     public function join($table, $key, $operator, $value) {
-        $joinClaus = new JoinWhereClaus($table, $key, $operator, $value);
-        array_push($this->joins, $joinClaus);
+        $joinClause = new JoinWhereClause($table, $key, $operator, $value);
+        array_push($this->joins, $joinClause);
         return $this;
     }
 
@@ -80,8 +80,8 @@ class SelectQuery extends WhereQuery {
         //Een van de twee moet altijd null zijn
         $whereOrJoin = array_merge($where, $joins);
         $prepared = $this->pdo->prepare($sql);
-        foreach ($whereOrJoin as $claus) {
-            $prepared->bindValue($claus->placeholder, $claus->value);
+        foreach ($whereOrJoin as $clause) {
+            $prepared->bindValue($clause->placeholder, $clause->value);
         }
 
         $prepared->execute();

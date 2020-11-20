@@ -1,6 +1,6 @@
 <?php
 
-class JoinWhereClaus extends WhereClaus {
+class JoinWhereClause extends WhereClause {
     public $table;
 
     public function __construct($table, $key, $operator, $value) {

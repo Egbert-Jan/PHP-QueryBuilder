@@ -1,6 +1,6 @@
 <?php
 
-class WhereClaus extends KeyValClaus {
+class WhereClause extends KeyValClause {
     //AND - OR
     public $afterCondition = NULL;
 

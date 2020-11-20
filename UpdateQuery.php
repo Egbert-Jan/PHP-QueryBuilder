@@ -10,7 +10,6 @@ class UpdateQuery extends WhereQuery {
     private $keyValues = [];
 
     public function set($keyVals) {
-        // array_push($this->sets, new KeyValClaus())
         $this->keyValues = $keyVals;
         return $this;
     }
@@ -34,8 +33,8 @@ class UpdateQuery extends WhereQuery {
             $prepared->bindValue(":".$key, $this->keyValues[$key]);
         }
 
-        foreach ($this->where as $claus) {
-            $prepared->bindValue($claus->placeholder, $claus->value);
+        foreach ($this->where as $clause) {
+            $prepared->bindValue($clause->placeholder, $clause->value);
         }
         // print_r($prepared);
         return $prepared->execute();

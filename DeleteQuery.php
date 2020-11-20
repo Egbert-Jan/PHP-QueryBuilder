@@ -10,8 +10,8 @@ class DeleteQuery extends WhereQuery {
         $sql = $this->createWhere($sql);
 
         $prepared = $this->pdo->prepare($sql);
-        foreach ($this->where as $claus) {
-            $prepared->bindValue($claus->placeholder, $claus->value);
+        foreach ($this->where as $clause) {
+            $prepared->bindValue($clause->placeholder, $clause->value);
         }
 
         return $prepared->execute();

@@ -5,7 +5,7 @@ abstract class WhereQuery extends QueryBaseClass {
     protected $where = [];
 
     public function where($key, $operator, $value) {     
-        array_push($this->where, new WhereClaus($key, $operator, $value));
+        array_push($this->where, new WhereClause($key, $operator, $value));
         return $this;
     }
 

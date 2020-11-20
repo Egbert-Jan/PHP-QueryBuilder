@@ -1,6 +1,6 @@
 <?php
 
-class KeyValClaus {
+class KeyValClause {
     public $key;
     public $operator;
     public $value;
