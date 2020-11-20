@@ -189,7 +189,6 @@ class InsertQuery extends Query {
     }
 }
 
-
 //Add support for other joins
 //Add support for where and joins in same query
 class SelectQuery extends Query {
@@ -198,6 +197,7 @@ class SelectQuery extends Query {
     private $where = [];
     private $joins = [];
     private $orderBys = [];
+    private $limit = [];
     
     public function setColumns($selection) {
         $this->selection = $selection;
@@ -249,6 +249,11 @@ class SelectQuery extends Query {
         return $this;
     }
 
+    public function limit($number, $offset = null) {
+        $this->limit = [$number, $offset];
+        return $this;
+    }
+
     public function execute() {
         global $pdo;
 
@@ -280,6 +285,15 @@ class SelectQuery extends Query {
 
             foreach($orderBys as $key => $value) {
                 $sql .= $key . " " . $value;
+            }
+        }
+
+        $limit = $this->limit;
+        if(!empty($limit)) {
+            if(!is_null($limit[1])) {
+                $sql .= " LIMIT " . $limit[1].", ".$limit[0];
+            } else {
+                $sql .= " LIMIT " . $limit[0];
             }
         }
         
@@ -322,6 +336,7 @@ $builder = $builder
     // ->count()
 
     ->orderBy("Name", ">") // < / > or DESC / ASC
+    ->limit(3, 10)
     ->execute();
 // echo"<br>";
 // echo"<br>";
