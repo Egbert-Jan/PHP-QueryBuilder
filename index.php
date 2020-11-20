@@ -11,6 +11,7 @@ $pdo = new PDO('mysql:host=localhost;dbname=DataMapperTest', "root", "root");
 abstract class Entity {
 
     // private $pdo;
+    // private $queryBuiler;
 
     function __construct() {
         // self::$pdo = new PDO('mysql:host=localhost;dbname=DataMapperTest', "root", "root");
@@ -19,6 +20,9 @@ abstract class Entity {
 
         // global $pdo;
         // $this->pdo = $pdo;
+
+        // $this->queryBuiler = new QueryBuilder();
+        // $this->queryBuiler;
     }
     
     abstract public static function tableName(): string;
@@ -108,8 +112,6 @@ $user->name = "wow";
 $user->age = 90;
 $user->update();
 
-// $nUser = new User();
-// echo $nUser->findWhere();
 
 
 
@@ -121,11 +123,17 @@ class KeyValClaus {
     public $key;
     public $operator;
     public $value;
+    public $placeholder;
+
+    private $placeholderCounter = 0;
     
     public function __construct($key, $operator, $value) {
         $this->key = $key;
         $this->operator = $operator;
+        $this->placeholder = ":".$this->placeholderCounter;
         $this->value = $value;
+
+        $this->placeholderCounter++;
     }
 }
 
@@ -170,8 +178,6 @@ abstract class Query {
 }
 
 class InsertQuery extends Query {
-    // INSERT INTO Customers (CustomerName, City, Country)
-    // VALUES ('Cardinal', 'Stavanger', 'Norway');
 
     public function execute() {
         global $pdo;
@@ -183,11 +189,13 @@ class InsertQuery extends Query {
     }
 }
 
+
+//Add support for other joins
+//Add support for where and joins in same query
 class SelectQuery extends Query {
 
     private $selection = ["*"];
     private $where = [];
-    private $lastCondition = NULL;
     private $joins = [];
     
     public function setColumns($selection) {
@@ -195,24 +203,30 @@ class SelectQuery extends Query {
         return $this;
     }
 
-    // $array = array("foo" => "bar");
-    public function where($key, $operator, $value) {
-
-        if(count($this->where) > 0) {
-            $lastWhere = array_pop($this->where);
-            $lastWhere->afterCondition = $this->lastCondition;;
-            array_push($this->where, $lastWhere);
-        }
-        
+    public function where($key, $operator, $value) {     
         array_push($this->where, new WhereClaus($key, $operator, $value));
-
         return $this;
     }
 
-    public function and() { $this->lastCondition = "AND"; return $this; }
-    public function or() { $this->lastCondition = "OR";  return $this; }
-    public function not() { $this->lastCondition = "NOT";  return $this; }
+    public function and() { 
+        $this->addOperator("AND");
+        return $this; 
+    }
+    public function or() { 
+        $this->addOperator("OR");
+        return $this; 
+    }
 
+    public function not() { 
+        $this->addOperator("NOT");
+        return $this;
+    }
+
+    private function addOperator($operator) {
+        if(count($this->where) < 1) { return; }
+        $this->where[count($this->where)-1]->afterCondition = $operator;
+    }
+    
     public function count($column = "id") { $this->selection = ["COUNT(" . $column . ")"]; return $this; }
     public function average($column = "id") { $this->selection = ["AVG(" . $column . ")"]; return $this; }
     public function sum($column = "id") { $this->selection = ["SUM(" . $column . ")"]; return $this; }
@@ -232,7 +246,7 @@ class SelectQuery extends Query {
         if(!empty($joins)) {
             for($i = 0; $i < count($joins); $i++) {
                 $sql .= " INNER JOIN ";
-                $sql .=  $joins[$i]->table . " ON " .$joins[$i]->key . $joins[$i]->operator . $joins[$i]->value;
+                $sql .=  $joins[$i]->table . " ON " .$joins[$i]->key . $joins[$i]->operator . $joins[$i]->placeholder;
             }
         }
         
@@ -240,68 +254,93 @@ class SelectQuery extends Query {
         if(!empty($where)) {
             $sql .= " WHERE ";
             for($i = 0; $i < count($where); $i++) {
-                $sql .= $where[$i]->key . $where[$i]->operator . $where[$i]->value;
+                $sql .= $where[$i]->key . $where[$i]->operator . $where[$i]->placeholder;
                 $afterCon = $where[$i]->afterCondition;
                 if(!is_null($afterCon)) {
                     $sql .= " " . $afterCon . " ";
                 }
             }
-
-            // $pdo->prepare($sql);
-            // $prepared = $pdo->prepare("SELECT * FROM " . static::tableName() . " WHERE id=?");
-            // $prepared->execute([$id]);
         }
+        
+        echo $sql . "<br>";
 
-        echo $sql;
+        //Een van de twee moet altijd null zijn
+        $whereOrJoin = array_merge($where, $joins);
+        $prepared = $pdo->prepare($sql);
+        foreach ($whereOrJoin as $claus) {
+            $prepared->bindValue($claus->placeholder, $claus->value);
+        }
+        return $prepared->execute();
     }
 }
 
 
-$builder = new QueryBuilder();
-$builder = $builder
-    ->insert()
-    ->table("Users")
-    ->execute();
-
-echo"<br>";
-echo"Example queries: <br>";
-echo "SELECT COUNT(column_name) FROM table_name WHERE condition;";
-echo"<br>";
-echo "SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate FROM Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;";
 
 
+// echo"<br>";
+// echo"Example queries: <br>";
+// echo "INSERT INTO Customers (CustomerName, City, Country) VALUES ('Cardinal', 'Stavanger', 'Norway');";
+// // echo "SELECT COUNT(column_name) FROM table_name WHERE condition;";
+// echo"<br>";
+// // echo "SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate FROM Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;";
+// $builder = new QueryBuilder();
+// $builder = $builder
+//     ->insert()
+//     ->table("Users")
+//     ->execute();
 
-echo"<br>";
-echo"<br>";
+// echo"<br>";
+// echo"<br>";
+// echo"QueryBuilder queries:";
+// echo"<br>";
+// $builder = new QueryBuilder();
+// $builder = $builder
+//     ->select()
+//     ->table("Users")
+//     ->where("id", "=", 4)
+//     // ->count()
+//     ->execute();
+// echo"<br>";
+// echo"<br>";
+// echo"<br>";
+
+// $builder = new QueryBuilder();
+
+// $builder = $builder
+//     ->select()
+//     ->table("Users")
+//     // ->setColumns(["name", "age"])
+//     ->where("id", "=", 4)
+//     ->or()
+//     ->where("id", "=", 6)
+//     ->execute();
+// echo"<br>";
 $builder = new QueryBuilder();
 $builder = $builder
     ->select()
     ->table("Users")
-    ->where("id", "=", 4)
-    ->count()
-    ->execute();
-echo"<br>";
-echo"<br>";
-$builder = new QueryBuilder();
-$builder = $builder
-    ->select()
-    ->table("Users")
-    ->setColumns(["name", "age"])
-    ->where("id", "=", 4)
-    ->or()
-    ->where("id", "=", 6)
-    ->execute();
-echo"<br>";
-$builder = new QueryBuilder();
-$builder = $builder
-    ->select()
-    ->table("Users")
-    ->join("Products", "Users.id", "=", "Products.user_id")
-    ->join("Category", "Users.id", "=", "Category.user_id")
-    ->setColumns(["User.name", "User.age", "Product.name"])
+    ->join("Products", "Products.id", "=", 1)
+    // ->join("Category", "Users.id", "=", "Category.user_id")
+    ->setColumns(["Users.name", "Products.name"])
     ->execute();
 
-echo"<br>";
-echo"<br>";
+// echo"<br>";
+// echo"<br>";
+
+// $builder = (new QueryBuilder())
+//     ->select()
+//     ->table("Users")
+//     ->join("Products", "Products.id", "=", 1)
+//     // ->join("Category", "Users.id", "=", "Category.user_id")
+//     ->setColumns(["Users.name", "Products.name"])
+//     ->execute();
 
 
+// $builder = new QueryBuilder();
+// $builder = $builder
+//     ->select()
+//     ->table("Users")
+//     ->join("Products", "Users.id", "=", 3)
+//     // ->join("Category", "Users.id", "=", "Category.user_id")
+//     ->setColumns(["User.name", "User.age", "Product.name"])
+//     ->execute();
