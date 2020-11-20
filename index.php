@@ -107,10 +107,10 @@ class User extends Entity {
 // $user->email = "email";
 // $user->save();
 
-$user = User::find(4);
-$user->name = "wow";
-$user->age = 90;
-$user->update();
+// $user = User::find(4);
+// $user->name = "wow";
+// $user->age = 90;
+// $user->update();
 
 
 
@@ -125,15 +125,15 @@ class KeyValClaus {
     public $value;
     public $placeholder;
 
-    private $placeholderCounter = 0;
+    static $placeholderCounter = 0;
     
     public function __construct($key, $operator, $value) {
         $this->key = $key;
         $this->operator = $operator;
-        $this->placeholder = ":".$this->placeholderCounter;
+        $this->placeholder = ":".static::$placeholderCounter;
         $this->value = $value;
 
-        $this->placeholderCounter++;
+        static::$placeholderCounter++;
     }
 }
 
@@ -156,33 +156,33 @@ class JoinWhereClaus extends WhereClaus {
 }
 
 class QueryBuilder {
-    
-    public function select() {
-        return new SelectQuery();
-    }
-
-    public function insert($keyVals) {
-        return new InsertQuery($keyVals);
-    }
-}
-
-abstract class Query {
     protected $table;
 
     public function table($table) {
         $this->table = $table;
         return $this;
     }
+    
+    public function select() {
+        $selectQuery = new SelectQuery();
+        $selectQuery->table = $this->table;
+        return $selectQuery;
+    }
+
+    public function insert($keyVals) {
+        $insertQuery = new InsertQuery($keyVals);
+        $insertQuery->table = $this->table;
+        return $insertQuery->insert($keyVals);
+    }
+}
+
+abstract class Query {
+    public $table;
 
     // public abstract function exec();
 }
 
 class InsertQuery extends Query {
-
-    function __construct($keyVals)
-    {
-        $this->insert($keyVals);
-    }
 
     public function insert($keyVals) {
         global $pdo;
@@ -345,13 +345,13 @@ class SelectQuery extends Query {
 
 
 $result = (new QueryBuilder())
-    ->select()
     ->table("Users")
-    ->where("id", "=", 4)
+    ->select()
+    ->where("id", "=", 11)
     ->or()
-    ->where("id", "=", 6)
+    ->where("id", "=", 12)
     ->orderBy("Name", ">") 
-    ->limit(1, 1)
+    ->limit(2)
     // ->get();
     ->getAll();
 
@@ -361,12 +361,12 @@ echo"<br>";
 echo"<br>";
 
 $result1 = (new QueryBuilder())
+    ->table("Users")
     ->insert([
         "name" => "Egbert",
         "age" => 20, 
         "email" => "jow"
-    ])
-    ->table("Users");
+    ]);
 
 var_dump($result1);
 
@@ -381,8 +381,14 @@ echo"<br>";
 //         "email" => "jow"
 //     ]);
 
-echo"<br>";
-echo"<br>";
+// (new QueryBuilder())
+//     ->table("Users")
+//     ->select()
+//     ->where()
+//     ->getAll();
+
+// echo"<br>";
+// echo"<br>";
 
 // $builder = new SelectQuery();
 // $builder = $builder
