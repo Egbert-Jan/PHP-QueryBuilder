@@ -68,7 +68,6 @@ class SelectQuery extends QueryBaseClass {
     }
 
     private function buildQuery() {
-        global $pdo;
 
         $sql = "SELECT " . implode(", ", $this->selection) . " FROM " . $this->table;
 
@@ -114,7 +113,7 @@ class SelectQuery extends QueryBaseClass {
 
         //Een van de twee moet altijd null zijn
         $whereOrJoin = array_merge($where, $joins);
-        $prepared = $pdo->prepare($sql);
+        $prepared = $this->pdo->prepare($sql);
         foreach ($whereOrJoin as $claus) {
             $prepared->bindValue($claus->placeholder, $claus->value);
         }

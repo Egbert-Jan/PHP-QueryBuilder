@@ -9,5 +9,10 @@ abstract class QueryBaseClass {
         $this->pdo = $pdo;
     }
 
+    public function table($table) {
+        $this->table = $table;
+        return $this;
+    }
+
     // public abstract function exec();
 }

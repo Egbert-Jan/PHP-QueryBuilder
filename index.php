@@ -11,6 +11,15 @@ include "Autoloader.php";
 
 $pdo = new PDO('mysql:host=localhost;dbname=DataMapperTest', "root", "root");
 
+$result = (new SelectQuery($pdo))
+    ->table("Users")
+    ->where("id", "=", 11)
+    ->or()
+    ->where("id", "=", 12)
+    ->orderBy("Name", ">") 
+    ->limit(2, 1)
+    ->getAll();
+
 $result = (new QueryBuilder($pdo))
     ->table("Users")
     ->select()
@@ -21,18 +30,26 @@ $result = (new QueryBuilder($pdo))
     ->limit(2, 1)
     ->getAll();
 
-var_dump($result);
-
 // echo"<br>";
 // echo"<br>";
 
-$result1 = (new QueryBuilder($pdo))
+
+$result1 = (new InsertQuery($pdo))
     ->table("Users")
     ->insert([
         "name" => "koekoek",
         "age" => 20, 
         "email" => "jow"
     ]);
+
+
+// $result1 = (new QueryBuilder($pdo))
+//     ->table("Users")
+//     ->insert([
+//         "name" => "koekoek",
+//         "age" => 20, 
+//         "email" => "jow"
+//     ]);
 
 // var_dump($result1);
 

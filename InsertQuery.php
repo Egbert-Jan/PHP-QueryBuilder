@@ -3,7 +3,6 @@
 class InsertQuery extends QueryBaseClass {
 
     public function insert($keyVals) {
-        global $pdo;
         $sql = "INSERT INTO " . $this->table . " (";
         $sql .= implode(", ", array_keys($keyVals)) . ")";
         
@@ -22,7 +21,7 @@ class InsertQuery extends QueryBaseClass {
         $this->sql = $sql;
         $this->keyVals = $keyVals;
 
-        $prepared = $pdo->prepare($sql);
+        $prepared = $this->pdo->prepare($sql);
         return $prepared->execute($keyVals);
     }
 }
