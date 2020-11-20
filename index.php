@@ -197,6 +197,7 @@ class SelectQuery extends Query {
     private $selection = ["*"];
     private $where = [];
     private $joins = [];
+    private $orderBys = [];
     
     public function setColumns($selection) {
         $this->selection = $selection;
@@ -237,6 +238,17 @@ class SelectQuery extends Query {
         return $this;
     }
 
+    //ORDER BY Country ASC, CustomerName DESC;
+    public function orderBy($column, $operator = "ASC") {
+        if($operator == "<" || $operator == "ASC") {
+            $this->orderBys[$column] = "ASC";
+        } else if ($operator == ">" || $operator == "DESC") {
+            $this->orderBys[$column] = "DESC";
+        }
+
+        return $this;
+    }
+
     public function execute() {
         global $pdo;
 
@@ -259,6 +271,15 @@ class SelectQuery extends Query {
                 if(!is_null($afterCon)) {
                     $sql .= " " . $afterCon . " ";
                 }
+            }
+        }
+        
+        $orderBys = $this->orderBys;
+        if(!empty($orderBys)) {
+            $sql .= " ORDER BY ";
+
+            foreach($orderBys as $key => $value) {
+                $sql .= $key . " " . $value;
             }
         }
         
@@ -293,13 +314,15 @@ class SelectQuery extends Query {
 // echo"<br>";
 // echo"QueryBuilder queries:";
 // echo"<br>";
-// $builder = new QueryBuilder();
-// $builder = $builder
-//     ->select()
-//     ->table("Users")
-//     ->where("id", "=", 4)
-//     // ->count()
-//     ->execute();
+$builder = new QueryBuilder();
+$builder = $builder
+    ->select()
+    ->table("Users")
+    ->where("id", "=", 4)
+    // ->count()
+
+    ->orderBy("Name", ">") // < / > or DESC / ASC
+    ->execute();
 // echo"<br>";
 // echo"<br>";
 // echo"<br>";
