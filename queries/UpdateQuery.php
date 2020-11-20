@@ -33,7 +33,8 @@ class UpdateQuery extends WhereQuery {
             $prepared->bindValue($clause->placeholder, $clause->value);
         }
         // print_r($prepared);
-        return $prepared->execute();
+        $prepared->execute();
+        return $prepared->rowCount();
     }
 
 }

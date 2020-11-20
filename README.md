@@ -8,6 +8,7 @@ $pdo = new PDO('mysql:host=localhost;dbname=database', "root", "root");
 ```
 
 ## Select
+### 1.
 ```php
 $result = (new SelectQuery($pdo))
     ->table("Users")
@@ -19,7 +20,7 @@ $result = (new SelectQuery($pdo))
     ->getAll();
 ```
 
-### Join
+### 2.
 ```php
 $result = (new SelectQuery($pdo))
     ->table("Users")
@@ -28,6 +29,7 @@ $result = (new SelectQuery($pdo))
     ->where("Animals.age", ">", "4")
     ->getAll();
 ```
+Returns an array with retrieved data depending on the PDO settings
 
 ## Insert
 ```php
@@ -39,6 +41,8 @@ $result = (new InsertQuery($pdo))
         "email" => "mail@example.com"
     ]);
 ```
+Returns amount of rows inserted by this query (0 or 1)
+
 
 ## Update
 ```php
@@ -50,6 +54,7 @@ $result = (new UpdateQuery($pdo))
     ->where("id", "=", 31)
     ->exec();
 ```
+Returns amount of rows updated by this query
 
 ## Delete
 ```php
@@ -60,3 +65,4 @@ $result = (new DeleteQuery($pdo))
     ->where("id", "=", 16)
     ->exec();
 ```
+Returns amount of rows deleted by this query
