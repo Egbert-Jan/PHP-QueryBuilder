@@ -75,7 +75,7 @@ class SelectQuery extends WhereQuery {
             }
         }
         
-        echo $sql . "<br>";
+        // echo $sql . "<br>";
 
         //Een van de twee moet altijd null zijn
         $whereOrJoin = array_merge($where, $joins);

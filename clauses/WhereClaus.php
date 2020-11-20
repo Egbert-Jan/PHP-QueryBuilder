@@ -1,7 +1,5 @@
 <?php
 
-
-
 class WhereClaus extends KeyValClaus {
     //AND - OR
     public $afterCondition = NULL;

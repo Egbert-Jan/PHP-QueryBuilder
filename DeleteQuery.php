@@ -4,8 +4,7 @@
 
 class DeleteQuery extends WhereQuery {
     
-    public function execute() {
-        //DELETE FROM Customers WHERE CustomerName='Alfreds Futterkiste';
+    public function exec() {
         $sql = "DELETE FROM " . $this->table;
 
         $sql = $this->createWhere($sql);
