@@ -276,7 +276,7 @@ class SelectQuery extends Query {
         return $this;
     }
 
-    public function get() {
+    private function buildQuery() {
         global $pdo;
 
         $sql = "SELECT " . implode(", ", $this->selection) . " FROM " . $this->table;
@@ -329,29 +329,46 @@ class SelectQuery extends Query {
         }
 
         $prepared->execute();
-        return $prepared->fetch();
+        return $prepared;
+    }
+
+    public function get() {
+        $preparedQuery = $this->buildQuery();
+        return $preparedQuery->fetch();
+    }
+
+    public function getAll() {
+        $preparedQuery = $this->buildQuery();
+        return $preparedQuery->fetchAll();
     }
 }
 
 
-(new QueryBuilder())
+$result = (new QueryBuilder())
     ->select()
     ->table("Users")
     ->where("id", "=", 4)
-    // ->or()
-    // ->where("id", "=", 6)
-    // ->orderBy("Name", ">") 
-    // ->limit(3, 10)
-    ->get();
+    ->or()
+    ->where("id", "=", 6)
+    ->orderBy("Name", ">") 
+    ->limit(1, 1)
+    // ->get();
+    ->getAll();
 
-(new QueryBuilder())
+var_dump($result);
+
+echo"<br>";
+echo"<br>";
+
+$result1 = (new QueryBuilder())
     ->insert([
         "name" => "Egbert",
         "age" => 20, 
         "email" => "jow"
     ])
     ->table("Users");
-    
+
+var_dump($result1);
 
 echo"<br>";
 echo"<br>";
