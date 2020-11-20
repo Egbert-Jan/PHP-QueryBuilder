@@ -161,8 +161,8 @@ class QueryBuilder {
         return new SelectQuery();
     }
 
-    public function insert() {
-        return new InsertQuery();
+    public function insert($keyVals) {
+        return new InsertQuery($keyVals);
     }
 }
 
@@ -174,23 +174,45 @@ abstract class Query {
         return $this;
     }
 
-    public abstract function execute();
+    // public abstract function exec();
 }
 
 class InsertQuery extends Query {
 
-    public function execute() {
-        global $pdo;
+    function __construct($keyVals)
+    {
+        $this->insert($keyVals);
+    }
 
-        $sql = "INSERT INTO " . $this->table;
-        echo $sql;
-        // implode(", ", $this->selection) . 
-        // $sql = "SELECT " . implode(", ", $this->selection) . " FROM " . $this->table;
+    public function insert($keyVals) {
+        global $pdo;
+        $sql = "INSERT INTO " . $this->table . " (";
+        $sql .= implode(", ", array_keys($keyVals)) . ")";
+        
+        $sql .= " VALUES ";
+        
+        $sql .= "(";
+        $keys = array_keys($keyVals);
+        foreach($keys as &$key) {
+            $key = ":".$key;
+        }
+        unset($val);
+        
+        $sql .= implode(", ", $keys);
+        $sql .= ")";
+
+        $this->sql = $sql;
+        $this->keyVals = $keyVals;
+
+        $prepared = $pdo->prepare($sql);
+        return $prepared->execute($keyVals);
     }
 }
 
 //Add support for other joins
 //Add support for where and joins in same query
+//Add MIN/MAX
+//add LIKE
 class SelectQuery extends Query {
 
     private $selection = ["*"];
@@ -254,7 +276,7 @@ class SelectQuery extends Query {
         return $this;
     }
 
-    public function execute() {
+    public function get() {
         global $pdo;
 
         $sql = "SELECT " . implode(", ", $this->selection) . " FROM " . $this->table;
@@ -305,80 +327,64 @@ class SelectQuery extends Query {
         foreach ($whereOrJoin as $claus) {
             $prepared->bindValue($claus->placeholder, $claus->value);
         }
-        return $prepared->execute();
+
+        $prepared->execute();
+        return $prepared->fetch();
     }
 }
 
 
-
-
-// echo"<br>";
-// echo"Example queries: <br>";
-// echo "INSERT INTO Customers (CustomerName, City, Country) VALUES ('Cardinal', 'Stavanger', 'Norway');";
-// // echo "SELECT COUNT(column_name) FROM table_name WHERE condition;";
-// echo"<br>";
-// // echo "SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate FROM Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;";
-// $builder = new QueryBuilder();
-// $builder = $builder
-//     ->insert()
-//     ->table("Users")
-//     ->execute();
-
-// echo"<br>";
-// echo"<br>";
-// echo"QueryBuilder queries:";
-// echo"<br>";
-$builder = new QueryBuilder();
-$builder = $builder
+(new QueryBuilder())
     ->select()
     ->table("Users")
     ->where("id", "=", 4)
-    // ->count()
+    // ->or()
+    // ->where("id", "=", 6)
+    // ->orderBy("Name", ">") 
+    // ->limit(3, 10)
+    ->get();
 
-    ->orderBy("Name", ">") // < / > or DESC / ASC
-    ->limit(3, 10)
-    ->execute();
-// echo"<br>";
-// echo"<br>";
-// echo"<br>";
+(new QueryBuilder())
+    ->insert([
+        "name" => "Egbert",
+        "age" => 20, 
+        "email" => "jow"
+    ])
+    ->table("Users");
+    
 
-// $builder = new QueryBuilder();
+echo"<br>";
+echo"<br>";
 
-// $builder = $builder
-//     ->select()
+// (new QueryBuilder())
 //     ->table("Users")
-//     // ->setColumns(["name", "age"])
+//     ->insert([
+//         "name" => "Egbert",
+//         "age" => 20, 
+//         "email" => "jow"
+//     ]);
+
+echo"<br>";
+echo"<br>";
+
+// $builder = new SelectQuery();
+// $builder = $builder
+//     ->table("Users")
 //     ->where("id", "=", 4)
 //     ->or()
 //     ->where("id", "=", 6)
-//     ->execute();
-// echo"<br>";
-$builder = new QueryBuilder();
-$builder = $builder
-    ->select()
-    ->table("Users")
-    ->join("Products", "Products.id", "=", 1)
-    // ->join("Category", "Users.id", "=", "Category.user_id")
-    ->setColumns(["Users.name", "Products.name"])
-    ->execute();
+//     ->orderBy("Name", ">") // < / > or DESC / ASC
+//     ->limit(3, 10)
+//     ->get();
 
 // echo"<br>";
 // echo"<br>";
-
-// $builder = (new QueryBuilder())
-//     ->select()
-//     ->table("Users")
-//     ->join("Products", "Products.id", "=", 1)
-//     // ->join("Category", "Users.id", "=", "Category.user_id")
-//     ->setColumns(["Users.name", "Products.name"])
-//     ->execute();
-
 
 // $builder = new QueryBuilder();
 // $builder = $builder
 //     ->select()
 //     ->table("Users")
-//     ->join("Products", "Users.id", "=", 3)
-//     // ->join("Category", "Users.id", "=", "Category.user_id")
-//     ->setColumns(["User.name", "User.age", "Product.name"])
-//     ->execute();
+//     ->join("Products", "Products.id", "=", 1)
+//     ->join("Category", "Users.id", "=", "Category.user_id")
+//     ->setColumns(["Users.name", "Products.name"])
+//     ->get();
