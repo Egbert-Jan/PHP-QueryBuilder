@@ -2,7 +2,7 @@
 
 abstract class QueryBaseClass {
     public $table;
-    private $pdo;
+    protected $pdo;
 
     function __construct($pdo)
     {
