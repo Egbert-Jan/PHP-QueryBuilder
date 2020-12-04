@@ -1,7 +1,7 @@
 <?php
 
 function autoLoadQueryBuilder($className) {
-    $folders = array_filter(glob('*'), 'is_dir');
+    $folders = array_filter(glob(dirname(__FILE__)."/*"), "is_dir");
     foreach($folders as $folder) {
         $path = $folder . "/" . $className . ".php";
         if(file_exists($path)) {

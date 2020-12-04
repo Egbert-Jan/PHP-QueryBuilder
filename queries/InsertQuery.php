@@ -22,8 +22,8 @@ class InsertQuery extends QueryBaseClass {
         $this->keyVals = $keyVals;
 
         $prepared = $this->pdo->prepare($sql);
-        // print_r($prepared);
         $prepared->execute($keyVals);
+        $this->printErrorsWhenInDebug($prepared);
         return $prepared->rowCount();
     }
 }

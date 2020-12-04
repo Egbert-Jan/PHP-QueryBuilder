@@ -9,7 +9,7 @@ class SelectQuery extends WhereQuery {
     private $selection = ["*"];
     private $joins = [];
     private $orderBys = [];
-    private $limit = [];
+    private $limit = []; private $top = "";
 
     public function setColumns($selection) {
         $this->selection = $selection;
@@ -19,6 +19,7 @@ class SelectQuery extends WhereQuery {
     public function count($column = "id") { $this->selection = ["COUNT(" . $column . ")"]; return $this; }
     public function average($column = "id") { $this->selection = ["AVG(" . $column . ")"]; return $this; }
     public function sum($column = "id") { $this->selection = ["SUM(" . $column . ")"]; return $this; }
+    public function max($column = "id") { $this->selection = ["MAX(" . $column . ")"]; return $this; }
 
     public function join($table, $key, $operator, $value) {
         $joinClause = new JoinWhereClause($table, $key, $operator, $value);
@@ -37,14 +38,23 @@ class SelectQuery extends WhereQuery {
         return $this;
     }
 
+    public function top($limit) {
+        $this->limit($limit);
+    }
+
     public function limit($limit, $offset = null) {
+        if($this->getDriver() == PDO_DRIVERS::SQLSERVER) {
+            //IF SQLSERVER
+            $this->top = "TOP ".$limit;    
+            return $this;
+        }
+        //IF MYSQL
         $this->limit = [$limit, $offset];
         return $this;
     }
 
     private function buildQuery() {
-
-        $sql = "SELECT " . implode(", ", $this->selection) . " FROM " . $this->table;
+        $sql = "SELECT ". $this->top . " " . implode(", ", $this->selection) . " FROM " . $this->table;
 
         $joins = $this->joins;
         if(!empty($joins)) {
@@ -84,9 +94,9 @@ class SelectQuery extends WhereQuery {
                 $prepared->bindValue($clause->placeholder, $clause->value);
             }
         }
-
-        print_r($prepared);
+        
         $prepared->execute();
+        $this->printErrorsWhenInDebug($prepared);
         return $prepared;
     }
 

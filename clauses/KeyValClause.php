@@ -13,9 +13,19 @@ class KeyValClause {
         $this->operator = $operator;
         $this->value = $value;
         
-        $this->placeholder = (strpos($value, ".") !== false)
-            ? $value
-            : ":".static::$placeholderCounter;
+        //If value contains a . it can not be prepared with PDO so we use it directly as value
+        // $this->placeholder = (strpos($value, ".") !== false)
+        //     ? $value
+        //     : ":".static::$placeholderCounter;
+
+        //Fix for SQLServer!!!!!!!!!! Values have to be between ' '
+        if(strpos($value, ".") !== false || strpos($value, "%") !== false) {  
+            $this->placeholder = (gettype($value) == "string")
+                ? "'" . $value . "'"
+                : $value;
+        } else {
+            $this->placeholder = ":".static::$placeholderCounter;
+        }
 
         static::$placeholderCounter++;
     }

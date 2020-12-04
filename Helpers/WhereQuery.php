@@ -34,7 +34,7 @@ abstract class WhereQuery extends QueryBaseClass {
         if(!empty($where)) {
             $sql .= " WHERE ";
             for($i = 0; $i < count($where); $i++) {
-                $sql .= $where[$i]->key . $where[$i]->operator . $where[$i]->placeholder;
+                $sql .= $where[$i]->key . " " . $where[$i]->operator . " " . $where[$i]->placeholder;
                 $afterCon = $where[$i]->afterCondition;
                 if(!is_null($afterCon)) {
                     $sql .= " " . $afterCon . " ";

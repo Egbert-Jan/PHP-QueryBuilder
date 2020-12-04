@@ -9,10 +9,13 @@ class DeleteQuery extends WhereQuery {
 
         $prepared = $this->pdo->prepare($sql);
         foreach ($this->where as $clause) {
-            $prepared->bindValue($clause->placeholder, $clause->value);
+            //Needed for joins. Parameters can't take a . (example: "Animals.user_id") | handled in KeyValClause
+            if(substr($clause->placeholder, 0, 1) == ":") {
+                $prepared->bindValue($clause->placeholder, $clause->value);
+            }
         }
-        // print_r($prepared);
         $prepared->execute();
+        $this->printErrorsWhenInDebug($prepared);
         return $prepared->rowCount();
     }
 }
